@@ -5,51 +5,97 @@ import React, {
 } from "react";
 
 import {
-  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
+  onAuthStateChanged,
 } from "firebase/auth";
 
-import { auth } from "../services/firebaseConfig";
+import {
+  auth,
+} from "../services/firebaseConfig";
 
-export const AuthContext = createContext();
+export const AuthContext =
+  createContext();
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider =
+  ({ children }) => {
 
-  const [user, setUser] = useState(null);
+    const [user, setUser] =
+      useState(null);
 
-  const [loading, setLoading] = useState(true);
+    const [loading, setLoading] =
+      useState(true);
 
-  useEffect(() => {
+    useEffect(() => {
 
-    const unsubscribe =
-      onAuthStateChanged(
-        auth,
-        (currentUser) => {
+      const unsubscribe =
+        onAuthStateChanged(
+          auth,
+          (currentUser) => {
 
-          setUser(currentUser);
+            setUser(currentUser);
 
-          setLoading(false);
+            setLoading(false);
+          }
+        );
+
+      return unsubscribe;
+
+    }, []);
+
+    const login =
+      async (
+        email,
+        password
+      ) => {
+
+        return await
+          signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+      };
+
+    const signup =
+      async (
+        email,
+        password
+      ) => {
+
+        return await
+          createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+      };
+
+    const logout =
+      async () => {
+
+        await signOut(auth);
+
+        setUser(null);
+      };
+
+    return (
+
+      <AuthContext.Provider
+        value={{
+          user,
+          login,
+          signup,
+          logout,
+        }}
+      >
+
+        {
+          !loading &&
+          children
         }
-      );
 
-    return unsubscribe;
-
-  }, []);
-
-  const logout = async () => {
-
-    await signOut(auth);
-  };
-
-  return (
-
-    <AuthContext.Provider
-      value={{
-        user,
-        logout,
-      }}
-    >
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+      </AuthContext.Provider>
+    );
 };
